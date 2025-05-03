@@ -88,11 +88,7 @@ function UserManagement() {
   const handleSave = async () => {
     try {
       if (!newUser.id || newUser.id.length < 6) {
-        setError('Tên đăng nhập phải có ít nhất 6 ký tự');
-        return;
-      }
-      if (!newUser.studentId || newUser.studentId.length < 6) {
-        setError('Mã số sinh viên phải có ít nhất 6 ký tự');
+        setError('Mã sinh viên phải có ít nhất 6 ký tự');
         return;
       }
       if (!newUser.name || newUser.name.length < 2) {
@@ -106,7 +102,6 @@ function UserManagement() {
 
       const userData = {
         id: newUser.id,
-        studentId: newUser.studentId,
         name: newUser.name,
         email: newUser.email,
         phone: newUser.phone,
@@ -115,34 +110,31 @@ function UserManagement() {
         address: newUser.address,
         role: newUser.role
       };
-
       if (newUser.password) {
         userData.password = newUser.password;
       }
 
       if (editUser) {
-        await api.put(`/admin/users/${editUser._id}`, userData);
-        setSuccess('Cập nhật thông tin người dùng thành công');
+        await api.put(`/admin/user/${editUser._id}`, userData);
+        setSuccess('Cập nhật người dùng thành công');
       } else {
-        await api.post('/admin/users', userData);
-        setSuccess('Thêm người dùng mới thành công');
+        await api.post('/admin/user', userData);
+        setSuccess('Thêm người dùng thành công');
       }
       fetchUsers();
       handleClose();
     } catch (err) {
-      setError(err.response?.data?.message || 'Lỗi khi lưu thông tin người dùng');
+      setError(err.response?.data?.message || 'Lỗi khi lưu người dùng');
     }
   };
 
   const handleDelete = async (userId) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
     try {
-        await api.delete(`/admin/users/${userId}`);
+      await api.delete(`/admin/user/${userId}`);
       setSuccess('Xóa người dùng thành công');
       fetchUsers();
     } catch (err) {
       setError(err.response?.data?.message || 'Lỗi khi xóa người dùng');
-      }
     }
   };
 

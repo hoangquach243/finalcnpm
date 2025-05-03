@@ -137,7 +137,7 @@ router.post('/register', async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ 
         success: false, 
-        message: existingUser.id === id ? 'Mã đăng nhập đã tồn tại' : 'Mã sinh viên đã tồn tại' 
+        message: existingUser.id === id ? 'Tên đăng nhập đã tồn tại' : 'Mã sinh viên đã tồn tại' 
       });
     }
 
@@ -233,7 +233,7 @@ router.post('/register-admin', async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Mã đăng nhập đã tồn tại'
+        message: 'Tên đăng nhập đã tồn tại'
       });
     }
 
