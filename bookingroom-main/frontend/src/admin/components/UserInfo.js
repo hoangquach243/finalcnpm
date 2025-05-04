@@ -30,8 +30,8 @@ function UserInfo() {
     const fetchUser = async () => {
       try {
         setLoading(true);
-        const res = await api.get('/admin/users');
-        const adminUser = res.data.find(u => u._id === authUser._id);
+        const res = await api.get('/auth/profile');
+        const adminUser = res.data.data;
         if (adminUser) {
           setUser({
             _id: adminUser._id,
@@ -72,9 +72,8 @@ function UserInfo() {
     setSuccess('');
     try {
       const updateData = {
-        id: user.id,
         name: user.name,
-        dob: user.birthDate,
+        birthDate: user.birthDate,
         gender: user.gender,
         address: user.address,
         email: user.email,
@@ -83,8 +82,8 @@ function UserInfo() {
       if (user.password) {
         updateData.password = user.password;
       }
-      const res = await api.put(`/admin/user/${user._id}`, updateData);
-      setSuccess(res.data.message);
+      const res = await api.put('/auth/update', updateData);
+      setSuccess('Cập nhật thông tin thành công');
     } catch (err) {
       setError(err.response?.data?.message || 'Cập nhật thông tin thất bại');
     }
