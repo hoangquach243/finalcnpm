@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Container, Typography, Table, TableHead, TableBody, TableRow, TableCell,
   Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
-  Snackbar, Alert, Box, MenuItem, AppBar, Toolbar, IconButton
+  Snackbar, Alert, Box, MenuItem, AppBar, Toolbar, IconButton, Grid
 } from '@mui/material';
 import { Logout as LogoutIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +13,15 @@ import Footer from './Footer';
 
 function SpaceManagement() {
   const [spaces, setSpaces] = useState([]);
+  const [filteredSpaces, setFilteredSpaces] = useState([]);
+  const [filters, setFilters] = useState({
+    building: '',
+    type: '',
+    floor: ''
+  });
+  const [availableFloors, setAvailableFloors] = useState([]);
+  const [availableBuildings, setAvailableBuildings] = useState([]);
+  const [availableTypes, setAvailableTypes] = useState([]);
   const [open, setOpen] = useState(false);
   const [editSpace, setEditSpace] = useState(null);
   const [newSpace, setNewSpace] = useState({
@@ -31,6 +40,29 @@ function SpaceManagement() {
     fetchSpaces();
   }, []);
 
+  useEffect(() => {
+    if (spaces.length > 0) {
+      // Lấy danh sách tầng duy nhất từ dữ liệu phòng
+      const floors = [...new Set(spaces.map(space => space.floor))].sort((a, b) => a - b);
+      setAvailableFloors(floors);
+
+      // Lấy danh sách tòa duy nhất từ dữ liệu phòng
+      const buildings = [...new Set(spaces.map(space => space.building))].sort();
+      setAvailableBuildings(buildings);
+
+      // Lấy danh sách loại phòng duy nhất từ dữ liệu phòng
+      const types = [...new Set(spaces.map(space => {
+        return space.roomType === 'individual' ? 'Phòng tự học' : 
+               space.roomType === 'group' ? 'Phòng học nhóm' : 'Phòng mentor';
+      }))].sort();
+      setAvailableTypes(types);
+    }
+  }, [spaces]);
+
+  useEffect(() => {
+    filterSpaces();
+  }, [spaces, filters]);
+
   const fetchSpaces = async () => {
     try {
       const res = await api.get('/admin/rooms');
@@ -38,6 +70,31 @@ function SpaceManagement() {
     } catch (err) {
       setError(err.response?.data?.message || 'Lỗi khi tải danh sách phòng');
     }
+  };
+
+  const filterSpaces = () => {
+    let result = [...spaces];
+    if (filters.building) {
+      result = result.filter(space => space.building === filters.building);
+    }
+    if (filters.type) {
+      result = result.filter(space => {
+        const spaceType = space.roomType === 'individual' ? 'Phòng tự học' : 
+                         space.roomType === 'group' ? 'Phòng học nhóm' : 'Phòng mentor';
+        return spaceType === filters.type;
+      });
+    }
+    if (filters.floor) {
+      result = result.filter(space => space.floor.toString() === filters.floor);
+    }
+    setFilteredSpaces(result);
+  };
+
+  const handleFilterChange = (field, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const handleOpen = (space = null) => {
@@ -152,9 +209,125 @@ function SpaceManagement() {
 
       <Container sx={{ mt: 4, mb: 4 }}>
         <Typography variant="h4" gutterBottom>Quản lý phòng</Typography>
-        <Button variant="contained" onClick={() => handleOpen()} sx={{ mb: 2 }}>
-          Thêm phòng
-        </Button>
+        
+        <Box sx={{ 
+          p: 2, 
+          mb: 3, 
+          borderRadius: 1, 
+          bgcolor: 'background.paper',
+          boxShadow: 1
+        }}>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                select
+                fullWidth
+                size="small"
+                label="Lọc theo tòa"
+                value={filters.building}
+                onChange={(e) => handleFilterChange('building', e.target.value)}
+                sx={{ 
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'background.paper',
+                    minWidth: '200px'
+                  },
+                  '& .MuiInputLabel-root': {
+                    backgroundColor: 'background.paper',
+                    padding: '0 4px'
+                  }
+                }}
+              >
+                <MenuItem value="">Tất cả tòa</MenuItem>
+                {availableBuildings.map(building => (
+                  <MenuItem key={building} value={building}>
+                    {building}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                select
+                fullWidth
+                size="small"
+                label="Lọc theo loại phòng"
+                value={filters.type}
+                onChange={(e) => handleFilterChange('type', e.target.value)}
+                sx={{ 
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'background.paper',
+                    minWidth: '200px'
+                  },
+                  '& .MuiInputLabel-root': {
+                    backgroundColor: 'background.paper',
+                    padding: '0 4px'
+                  }
+                }}
+              >
+                <MenuItem value="">Tất cả loại phòng</MenuItem>
+                {availableTypes.map(type => (
+                  <MenuItem key={type} value={type}>
+                    {type}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                select
+                fullWidth
+                size="small"
+                label="Lọc theo tầng"
+                value={filters.floor}
+                onChange={(e) => handleFilterChange('floor', e.target.value)}
+                sx={{ 
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'background.paper',
+                    minWidth: '200px'
+                  },
+                  '& .MuiInputLabel-root': {
+                    backgroundColor: 'background.paper',
+                    padding: '0 4px'
+                  }
+                }}
+              >
+                <MenuItem value="">Tất cả tầng</MenuItem>
+                {availableFloors.map(floor => (
+                  <MenuItem key={floor} value={floor.toString()}>
+                    Tầng {floor}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={12} md={3} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <Button 
+                variant="outlined" 
+                onClick={() => setFilters({ building: '', type: '', floor: '' })}
+                sx={{ 
+                  mr: 1,
+                  '&:hover': {
+                    backgroundColor: 'action.hover'
+                  }
+                }}
+              >
+                Xóa bộ lọc
+              </Button>
+              <Button 
+                variant="contained" 
+                onClick={() => handleOpen()}
+                sx={{ 
+                  backgroundColor: 'primary.main',
+                  '&:hover': {
+                    backgroundColor: 'primary.dark'
+                  }
+                }}
+              >
+                Thêm phòng mới
+              </Button>
+            </Grid>
+          </Grid>
+        </Box>
+
         <Table>
           <TableHead>
             <TableRow>
@@ -166,7 +339,7 @@ function SpaceManagement() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {spaces.map((space) => (
+            {filteredSpaces.map((space) => (
               <TableRow key={space._id}>
                 <TableCell>{space.roomName}</TableCell>
                 <TableCell>
